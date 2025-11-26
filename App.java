@@ -28,7 +28,90 @@ public class App {
 
             switch (opcao) {
                 case 1:
-                    // Chamar funcoes do SistemaAtivos
+                    // Submenu para gerenciar ativos
+                    int opcAtivo;
+                    do {
+                        System.out.println("\nMenu Ativos:");
+                        System.out.println("1. Cadastrar Ativo");
+                        System.out.println("2. Listar Ativos");
+                        System.out.println("3. Buscar Ativo por Nome");
+                        System.out.println("4. Buscar Ativo por Código");
+                        System.out.println("0. Voltar");
+                        System.out.print("Escolha uma opcao: ");
+                        opcAtivo = scanner.nextInt();
+                        scanner.nextLine(); // Consumir newline
+
+                        switch (opcAtivo) {
+                            case 1:
+                                System.out.print("Código: ");
+                                String codigo = scanner.nextLine();
+                                System.out.print("Nome: ");
+                                String nome = scanner.nextLine();
+                                System.out.print("Tipo: ");
+                                String tipo = scanner.nextLine();
+                                System.out.print("Risco: ");
+                                String risco = scanner.nextLine();
+                                System.out.print("Rentabilidade Média: ");
+                                double rentabilidadeMedia = scanner.nextDouble();
+                                System.out.print("Valor Atual: ");
+                                double valorAtual = scanner.nextDouble();
+                                System.out.print("Variação Percentual: ");
+                                double variacaoPercentual = scanner.nextDouble();
+                                scanner.nextLine(); // Consumir newline
+
+                                Ativo ativo = new Ativo(codigo, nome, tipo, risco, rentabilidadeMedia, valorAtual, variacaoPercentual, 0);
+                                sistemaAtivos.cadastrarAtivo(ativo);
+                                System.out.println("Ativo cadastrado com sucesso!");
+                                break;
+
+                            case 2:
+                                DLL<Ativo> listaAtivos = sistemaAtivos.getListaAtivos();
+                                if (listaAtivos.isEmpty()) {
+                                    System.out.println("Nenhum ativo cadastrado.");
+                                } else {
+                                    Node<Ativo> atual = listaAtivos.getHead();
+                                    int i = 1;
+                                    while (atual != null) {
+                                        Ativo atv = atual.getData();
+                                        System.out.printf("%d) Código: %s - Nome: %s - Tipo: %s - Risco: %s - Valor Atual: %.2f\n",
+                                                i++, atv.getCodigo(), atv.getNome(), atv.getTipo(), atv.getRisco(), atv.getValorAtual());
+                                        atual = atual.getNext();
+                                    }
+                                }
+                                break;
+
+                            case 3:
+                                System.out.print("Digite o nome do ativo: ");
+                                String nomeBusca = scanner.nextLine();
+                                Ativo encontradoNome = new BuscaAtivos().buscaLinear(sistemaAtivos.getListaAtivos(), nomeBusca);
+                                if (encontradoNome != null) {
+                                    System.out.printf("Ativo encontrado: Código: %s - Nome: %s - Tipo: %s - Valor Atual: %.2f\n",
+                                            encontradoNome.getCodigo(), encontradoNome.getNome(), encontradoNome.getTipo(), encontradoNome.getValorAtual());
+                                } else {
+                                    System.out.println("Ativo não encontrado.");
+                                }
+                                break;
+
+                            case 4:
+                                System.out.print("Digite o código do ativo: ");
+                                String codigoBusca = scanner.nextLine();
+                                Ativo encontradoCodigo = new BuscaAtivos().buscaBinaria(sistemaAtivos.getListaAtivos(), codigoBusca);
+                                if (encontradoCodigo != null) {
+                                    System.out.printf("Ativo encontrado: Código: %s - Nome: %s - Tipo: %s - Valor Atual: %.2f\n",
+                                            encontradoCodigo.getCodigo(), encontradoCodigo.getNome(), encontradoCodigo.getTipo(), encontradoCodigo.getValorAtual());
+                                } else {
+                                    System.out.println("Ativo não encontrado.");
+                                }
+                                break;
+
+                            case 0:
+                                // Voltar ao menu principal
+                                break;
+
+                            default:
+                                System.out.println("Opcao invalida. Tente novamente.");
+                        }
+                    } while (opcAtivo != 0);
                     break;
                 case 2:
                     // Submenu para gerenciar investidores (incluir cadastro)
@@ -116,6 +199,7 @@ public class App {
                     break;
                 case 3:
                     // Chamar funcoes do SistemaRecomendacoes
+
                     break;
                 case 4:
                     // Chamar funcoes do SistemaTransacoes

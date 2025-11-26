@@ -108,6 +108,41 @@ public class DLL<T> {
         return null;
     }
 
+    // Retorna o elemento no índice especificado
+    public T get(int index) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException("Índice fora do intervalo: " + index);
+        }
+
+        Node<T> current = head;
+        for (int i = 0; i < index; i++) {
+            current = current.next;
+        }
+        return current.data;
+    }
+
+    // Implementa a interface Iterable
+    public java.util.Iterator<T> iterator() {
+        return new java.util.Iterator<T>() {
+            private Node<T> current = head;
+
+            @Override
+            public boolean hasNext() {
+                return current != null;
+            }
+
+            @Override
+            public T next() {
+                if (!hasNext()) {
+                    throw new java.util.NoSuchElementException();
+                }
+                T data = current.data;
+                current = current.next;
+                return data;
+            }
+        };
+    }
+
     // Acessores importantes
     public Node<T> getHead() {
         return head;
