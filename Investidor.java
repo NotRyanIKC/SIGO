@@ -1,13 +1,14 @@
 public class Investidor {
-
     private String nome;
     private String idade;
     private String perfilRisco;
     private double capitalDisponivel;
-
     private DLL<Investimento> historicoInvestimentos;
 
     public Investidor(String nome, String idade, String perfilRisco, double capitalDisponivel) {
+        if (capitalDisponivel < 0) {
+            throw new IllegalArgumentException("O capital disponível não pode ser negativo.");
+        }
         this.nome = nome;
         this.idade = idade;
         this.perfilRisco = perfilRisco;
@@ -17,7 +18,7 @@ public class Investidor {
 
     public String getNome() {
         return nome;
-    }   
+    }
 
     public void setNome(String nome) {
         this.nome = nome;
@@ -44,6 +45,9 @@ public class Investidor {
     }
 
     public void setCapitalDisponivel(double capitalDisponivel) {
+        if (capitalDisponivel < 0) {
+            throw new IllegalArgumentException("O capital disponível não pode ser negativo.");
+        }
         this.capitalDisponivel = capitalDisponivel;
     }
 
@@ -55,6 +59,23 @@ public class Investidor {
         this.historicoInvestimentos = historicoInvestimentos;
     }
 
-    
-    
+    public double calcularTotalInvestido() {
+        double total = 0.0;
+        Node<Investimento> atual = historicoInvestimentos.getHead();
+        while (atual != null) {
+            total += atual.getData().getValorAplicado();
+            atual = atual.getNext();
+        }
+        return total;
+    }
+
+    public double calcularLucroPrejuizoAcumulado() {
+        double total = 0.0;
+        Node<Investimento> atual = historicoInvestimentos.getHead();
+        while (atual != null) {
+            total += atual.getData().getLucroPrejuizoAcumulado();
+            atual = atual.getNext();
+        }
+        return total;
+    }
 }

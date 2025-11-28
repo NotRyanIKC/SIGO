@@ -1,5 +1,4 @@
 public class DLL<T> {
-
     private Node<T> head;
     private Node<T> tail;
     private int size;
@@ -10,7 +9,6 @@ public class DLL<T> {
         this.size = 0;
     }
 
-    // Inserir no começo
     public void add(T data) {
         Node<T> newNode = new Node<>(data);
 
@@ -18,15 +16,14 @@ public class DLL<T> {
             head = newNode;
             tail = newNode;
         } else {
-            newNode.next = head;
-            head.prev = newNode;
+            newNode.setNext(head);
+            head.setPrev(newNode);
             head = newNode;
         }
 
         size++;
     }
 
-    // Inserir no fim
     public void addLast(T data) {
         Node<T> newNode = new Node<>(data);
 
@@ -34,116 +31,116 @@ public class DLL<T> {
             head = newNode;
             tail = newNode;
         } else {
-            tail.next = newNode;
-            newNode.prev = tail;
+            tail.setNext(newNode);
+            newNode.setPrev(tail);
             tail = newNode;
         }
 
         size++;
     }
 
-    // Remover o primeiro elemento
     public void removeFirst() {
-        if (head == null) return;
+        if (head == null) {
+            return;
+        }
 
         if (head == tail) {
             head = null;
             tail = null;
         } else {
-            head = head.next;
-            head.prev = null;
+            head = head.getNext();
+            head.setPrev(null);
         }
 
         size--;
     }
 
-    // Remover o último elemento
     public void removeLast() {
-        if (tail == null) return;
+        if (tail == null) {
+            return;
+        }
 
         if (head == tail) {
             head = null;
             tail = null;
         } else {
-            tail = tail.prev;
-            tail.next = null;
+            tail = tail.getPrev();
+            tail.setNext(null);
         }
 
         size--;
     }
 
-    // Remover um elemento específico
     public boolean remove(T data) {
         Node<T> current = head;
 
         while (current != null) {
-            if (current.data.equals(data)) {
+            if (current.getData().equals(data)) {
+                if (current.getPrev() != null) {
+                    current.getPrev().setNext(current.getNext());
+                } else {
+                    head = current.getNext();
+                }
 
-                if (current.prev != null) current.prev.next = current.next;
-                else head = current.next;
-
-                if (current.next != null) current.next.prev = current.prev;
-                else tail = current.prev;
+                if (current.getNext() != null) {
+                    current.getNext().setPrev(current.getPrev());
+                } else {
+                    tail = current.getPrev();
+                }
 
                 size--;
                 return true;
             }
-            current = current.next;
+            current = current.getNext();
         }
 
         return false;
     }
 
-    // Procurar elemento
     public T find(T data) {
         Node<T> current = head;
 
         while (current != null) {
-            if (current.data.equals(data)) {
-                return current.data;
+            if (current.getData().equals(data)) {
+                return current.getData();
             }
-            current = current.next;
+            current = current.getNext();
         }
 
         return null;
     }
 
-    // Retorna o elemento no índice especificado
     public T get(int index) {
         if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException("Índice fora do intervalo: " + index);
+            throw new IndexOutOfBoundsException("Indice fora do intervalo: " + index);
         }
 
         Node<T> current = head;
         for (int i = 0; i < index; i++) {
-            current = current.next;
+            current = current.getNext();
         }
-        return current.data;
+        return current.getData();
     }
 
-    // Implementa a interface Iterable
     public java.util.Iterator<T> iterator() {
         return new java.util.Iterator<T>() {
             private Node<T> current = head;
 
-            @Override
             public boolean hasNext() {
                 return current != null;
             }
 
-            @Override
             public T next() {
                 if (!hasNext()) {
                     throw new java.util.NoSuchElementException();
                 }
-                T data = current.data;
-                current = current.next;
+                T data = current.getData();
+                current = current.getNext();
                 return data;
             }
         };
     }
 
-    // Acessores importantes
     public Node<T> getHead() {
         return head;
     }
@@ -160,16 +157,16 @@ public class DLL<T> {
         return size == 0;
     }
 
-    // Apenas para debug
-    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[");
         Node<T> current = head;
 
         while (current != null) {
-            sb.append(current.data);
-            if (current.next != null) sb.append(", ");
-            current = current.next;
+            sb.append(current.getData());
+            if (current.getNext() != null) {
+                sb.append(", ");
+            }
+            current = current.getNext();
         }
 
         sb.append("]");

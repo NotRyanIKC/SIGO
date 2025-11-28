@@ -1,9 +1,8 @@
 public class Investimento {
-
-    private Ativo ativo;                       // ativo comprado
-    private double valorAplicado;              // valor investido pelo usuário
-    private double valorInicial;               // valor do ativo no momento da compra
-    private double lucroPrejuizoAcumulado;     // usado para saber quanto já lucrou/perdeu
+    private Ativo ativo;
+    private double valorAplicado;
+    private double valorInicial;
+    private double lucroPrejuizoAcumulado;
 
     public Investimento(Ativo ativo, double valorAplicado, double valorInicial, double lucroPrejuizoAcumulado) {
         this.ativo = ativo;
@@ -11,10 +10,6 @@ public class Investimento {
         this.valorInicial = valorInicial;
         this.lucroPrejuizoAcumulado = lucroPrejuizoAcumulado;
     }
-
-    // ----------------------
-    //       GETTERS
-    // ----------------------
 
     public Ativo getAtivo() {
         return ativo;
@@ -29,6 +24,9 @@ public class Investimento {
     }
 
     public void setValorAplicado(double valorAplicado) {
+        if (valorAplicado < 0) {
+            throw new IllegalArgumentException("O valor aplicado não pode ser negativo.");
+        }
         this.valorAplicado = valorAplicado;
     }
 
@@ -37,6 +35,9 @@ public class Investimento {
     }
 
     public void setValorInicial(double valorInicial) {
+        if (valorInicial < 0) {
+            throw new IllegalArgumentException("O valor inicial não pode ser negativo.");
+        }
         this.valorInicial = valorInicial;
     }
 
@@ -48,26 +49,22 @@ public class Investimento {
         this.lucroPrejuizoAcumulado = lucroPrejuizoAcumulado;
     }
 
-
     public double getValorAtual() {
         return ativo.getValorAtual();
     }
 
-    // Lucro/prejuízo atual calculado agora
     public double calcularLucroPrejuizoAtual() {
         return ativo.getValorAtual() - valorInicial;
     }
 
-    // Atualiza o lucro acumulado
     public void atualizarLucroAcumulado() {
         this.lucroPrejuizoAcumulado += calcularLucroPrejuizoAtual();
     }
 
-    @Override
     public String toString() {
-        return "Investimento em " + ativo.getCodigo() +
-               " | Valor Aplicado: R$ " + valorAplicado +
-               " | Valor Inicial: R$ " + valorInicial +
-               " | Lucro/Prejuizo acumulado: R$ " + lucroPrejuizoAcumulado;
+        return "Investimento em " + ativo.getCodigo()
+                + " | Valor Aplicado: R$ " + valorAplicado
+                + " | Valor Inicial: R$ " + valorInicial
+                + " | Lucro/Prejuizo acumulado: R$ " + lucroPrejuizoAcumulado;
     }
 }

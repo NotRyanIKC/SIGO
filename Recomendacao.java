@@ -1,10 +1,8 @@
 public class Recomendacao {
-
     private Ativo ativo;
     private String score;
     private String justificativa;
     private boolean ativa = true;
-
 
     public Recomendacao(Ativo ativo, String score, String justificativa, boolean ativa) {
         this.ativo = ativo;
@@ -44,5 +42,8 @@ public class Recomendacao {
     public void setAtiva(boolean ativa) {
         this.ativa = ativa;
     }
-    
+
+    public String getDescricao() {
+        return justificativa;
+    }
 }

@@ -1,33 +1,49 @@
 public class BuscaAtivos {
-
     public Ativo buscaLinear(DLL<Ativo> lista, String nome) {
-        for (int i = 0; i < lista.size(); i++) { // Itera usando índice
+        long inicio = System.nanoTime();
+        int comparacoes = 0;
+
+        for (int i = 0; i < lista.size(); i++) {
+            comparacoes++;
             Ativo ativo = lista.get(i);
             if (ativo.getNome().equalsIgnoreCase(nome)) {
+                long fim = System.nanoTime();
+                System.out.printf("Busca linear concluída em %d ns com %d comparações.%n", (fim - inicio), comparacoes);
                 return ativo;
             }
         }
-        return null; // Retorna null se não encontrar
+
+        long fim = System.nanoTime();
+        System.out.printf("Busca linear concluída em %d ns com %d comparações.%n", (fim - inicio), comparacoes);
+        return null;
     }
 
     public Ativo buscaBinaria(DLL<Ativo> lista, String codigo) {
-        int inicio = 0;
-        int fim = lista.size() - 1;
+        long inicio = System.nanoTime();
+        int comparacoes = 0;
 
-        while (inicio <= fim) {
-            int meio = (inicio + fim) / 2;
-            Ativo ativoMeio = lista.get(meio); // Supondo que DLL tem método get(index)
+        int inicioIdx = 0;
+        int fimIdx = lista.size() - 1;
 
+        while (inicioIdx <= fimIdx) {
+            comparacoes++;
+            int meio = (inicioIdx + fimIdx) / 2;
+            Ativo ativoMeio = lista.get(meio);
             int comparacao = ativoMeio.getCodigo().compareTo(codigo);
+
             if (comparacao == 0) {
+                long fim = System.nanoTime();
+                System.out.printf("Busca binária concluída em %d ns com %d comparações.%n", (fim - inicio), comparacoes);
                 return ativoMeio;
             } else if (comparacao < 0) {
-                inicio = meio + 1;
+                inicioIdx = meio + 1;
             } else {
-                fim = meio - 1;
+                fimIdx = meio - 1;
             }
         }
-        return null; // Retorna null se não encontrar
-    }
 
+        long fim = System.nanoTime();
+        System.out.printf("Busca binária concluída em %d ns com %d comparações.%n", (fim - inicio), comparacoes);
+        return null;
+    }
 }

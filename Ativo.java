@@ -8,7 +8,9 @@ public class Ativo {
     private double variacaoPercentual;
     private int ciclosNegativos;
 
-    public Ativo(String codigo, String nome, String tipo, String risco, double rentabilidadeMedia, double valorAtual, double variacaoPercentual, int ciclosNegativos) {
+    public Ativo(String codigo, String nome, String tipo, String risco,
+                 double rentabilidadeMedia, double valorAtual,
+                 double variacaoPercentual, int ciclosNegativos) {
         this.codigo = codigo;
         this.nome = nome;
         this.tipo = tipo;
@@ -16,7 +18,7 @@ public class Ativo {
         this.rentabilidadeMedia = rentabilidadeMedia;
         this.valorAtual = valorAtual;
         this.variacaoPercentual = variacaoPercentual;
-        this.ciclosNegativos = 0;
+        this.ciclosNegativos = ciclosNegativos;
     }
 
     public String getCodigo() {
@@ -55,24 +57,39 @@ public class Ativo {
         return rentabilidadeMedia;
     }
 
-    public void setRentabilidadeMedia(double rentabilidadeMedia) {
+    public boolean setRentabilidadeMedia(double rentabilidadeMedia) {
+        if (rentabilidadeMedia < 0) {
+            System.out.println("A rentabilidade media nao pode ser negativa.");
+            return false;
+        }
         this.rentabilidadeMedia = rentabilidadeMedia;
+        return true;
     }
 
     public double getValorAtual() {
         return valorAtual;
     }
 
-    public void setValorAtual(double valorAtual) {
+    public boolean setValorAtual(double valorAtual) {
+        if (valorAtual < 0) {
+            System.out.println("O valor atual nao pode ser negativo.");
+            return false;
+        }
         this.valorAtual = valorAtual;
+        return true;
     }
 
     public double getVariacaoPercentual() {
         return variacaoPercentual;
     }
 
-    public void setVariacaoPercentual(double variacaoPercentual) {
+    public boolean setVariacaoPercentual(double variacaoPercentual) {
+        if (variacaoPercentual < 0) {
+            System.out.println("A variacao percentual nao pode ser negativa.");
+            return false;
+        }
         this.variacaoPercentual = variacaoPercentual;
+        return true;
     }
 
     public int getCiclosNegativos() {
@@ -83,5 +100,11 @@ public class Ativo {
         this.ciclosNegativos = ciclosNegativos;
     }
 
+    public void incrementarCiclosNegativos() {
+        this.ciclosNegativos++;
+    }
 
+    public void resetarCiclosNegativos() {
+        this.ciclosNegativos = 0;
+    }
 }
