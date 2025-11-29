@@ -22,92 +22,204 @@ public class SistemaAtivos {
     public void menuAtivos(Scanner scanner) {
         int opcAtivo;
         do {
-            System.out.println("\nMenu Ativos:");
+            System.out.println("\nMENU ATIVOS:");
             System.out.println("1. Cadastrar Ativo");
             System.out.println("2. Listar Ativos");
             System.out.println("3. Buscar Ativo por Nome");
-            System.out.println("4. Buscar Ativo por Codigo");
+            System.out.println("4. Buscar Ativo por Código");
             System.out.println("0. Voltar");
-            System.out.print("Escolha uma opcao: ");
-            while (!scanner.hasNextInt()) {
-                System.out.println("Digite um numero valido.");
-                scanner.next();
-            }
-            opcAtivo = scanner.nextInt();
-            scanner.nextLine();
+
+            opcAtivo = Utils.lerOpcao(scanner, 0, 4);
 
             switch (opcAtivo) {
-                case 1:
-                    try {
-                        System.out.print("Codigo: ");
-                        String codigo = scanner.nextLine();
-                        System.out.print("Nome: ");
-                        String nome = scanner.nextLine();
-                        System.out.print("Tipo: ");
-                        String tipo = scanner.nextLine();
-                        System.out.print("Risco: ");
-                        String risco = scanner.nextLine();
-                        System.out.print("Rentabilidade Media: ");
-                        double rentabilidadeMedia = scanner.nextDouble();
-                        System.out.print("Valor Atual: ");
-                        double valorAtual = scanner.nextDouble();
-                        System.out.print("Variacao Percentual: ");
-                        double variacaoPercentual = scanner.nextDouble();
-                        scanner.nextLine();
 
-                        Ativo ativo = new Ativo(codigo, nome, tipo, risco, rentabilidadeMedia, valorAtual, variacaoPercentual, 0);
-                        cadastrarAtivo(ativo);
-                        System.out.println("Ativo cadastrado com sucesso!");
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Erro ao cadastrar ativo: " + e.getMessage());
-                    }
+                case 1:
+                    cadastrarAtivoMenu(scanner);
                     break;
 
                 case 2:
-                    if (listaAtivos.isEmpty()) {
-                        System.out.println("Nenhum ativo cadastrado.");
-                    } else {
-                        Node<Ativo> atual = listaAtivos.getHead();
-                        int i = 1;
-                        while (atual != null) {
-                            Ativo atv = atual.getData();
-                            System.out.printf("%d) Codigo: %s - Nome: %s - Tipo: %s - Risco: %s - Valor Atual: %.2f%n",
-                                    i++, atv.getCodigo(), atv.getNome(), atv.getTipo(), atv.getRisco(), atv.getValorAtual());
-                            atual = atual.getNext();
-                        }
-                    }
+                    listarAtivos();
                     break;
 
                 case 3:
-                    System.out.print("Digite o nome do ativo: ");
-                    String nomeBusca = scanner.nextLine();
-                    Ativo encontradoNome = new BuscaAtivos().buscaLinear(listaAtivos, nomeBusca);
-                    if (encontradoNome != null) {
-                        System.out.printf("Ativo encontrado: Codigo: %s - Nome: %s - Tipo: %s - Valor Atual: %.2f%n",
-                                encontradoNome.getCodigo(), encontradoNome.getNome(), encontradoNome.getTipo(), encontradoNome.getValorAtual());
-                    } else {
-                        System.out.println("Ativo nao encontrado.");
-                    }
+                    buscarPorNome(scanner);
                     break;
 
                 case 4:
-                    System.out.print("Digite o codigo do ativo: ");
-                    String codigoBusca = scanner.nextLine();
-                    Ativo encontradoCodigo = new BuscaAtivos().buscaBinaria(listaAtivos, codigoBusca);
-                    if (encontradoCodigo != null) {
-                        System.out.printf("Ativo encontrado: Codigo: %s - Nome: %s - Tipo: %s - Valor Atual: %.2f%n",
-                                encontradoCodigo.getCodigo(), encontradoCodigo.getNome(), encontradoCodigo.getTipo(), encontradoCodigo.getValorAtual());
-                    } else {
-                        System.out.println("Ativo nao encontrado.");
-                    }
+                    buscarPorCodigo(scanner);
                     break;
 
                 case 0:
                     break;
 
                 default:
-                    System.out.println("Opcao invalida. Tente novamente.");
+                    System.out.println("Opção inválida.");
             }
+
         } while (opcAtivo != 0);
+    }
+
+    private void cadastrarAtivoMenu(Scanner scanner) {
+
+        System.out.print("Código: ");
+        String codigo = Utils.lerTexto(scanner);
+
+        System.out.print("Nome: ");
+        String nome = Utils.lerTexto(scanner);
+
+        // ---------------------
+        // VALIDAÇÃO DO TIPO COM A/B/C
+        // ---------------------
+        String tipo = "";
+        while (true) {
+            System.out.println("\nSelecione o Tipo do Ativo:");
+            System.out.println("A - Ação");
+            System.out.println("B - Renda Fixa");
+            System.out.println("C - Cripto");
+            System.out.print("Opção: ");
+
+            String opc = scanner.nextLine().trim().toUpperCase();
+
+            switch (opc) {
+                case "A":
+                    tipo = "Ação";
+                    break;
+                case "B":
+                    tipo = "Renda Fixa";
+                    break;
+                case "C":
+                    tipo = "Cripto";
+                    break;
+                default:
+                    System.out.println("ERRO: Opção inválida! Digite A, B ou C.");
+                    continue;
+            }
+            break;
+        }
+
+        // ---------------------
+        // VALIDAÇÃO DO RISCO COM A/B/C
+        // ---------------------
+        String risco = "";
+        while (true) {
+            System.out.println("\nSelecione o Risco:");
+            System.out.println("A - Baixo");
+            System.out.println("B - Médio");
+            System.out.println("C - Alto");
+            System.out.print("Opção: ");
+
+            String opc = scanner.nextLine().trim().toUpperCase();
+
+            switch (opc) {
+                case "A":
+                    risco = "baixo";
+                    break;
+                case "B":
+                    risco = "medio";
+                    break;
+                case "C":
+                    risco = "alto";
+                    break;
+                default:
+                    System.out.println("ERRO: Opção inválida! Digite A, B ou C.");
+                    continue;
+            }
+            break;
+        }
+
+        // ---------------------
+        // RENTABILIDADE MÉDIA (não aceita negativo)
+        // ---------------------
+        double rentabilidadeMedia;
+        while (true) {
+            System.out.print("Rentabilidade Média: ");
+            rentabilidadeMedia = Utils.lerDouble(scanner);
+
+            if (rentabilidadeMedia <= 0) {
+                System.out.println("ERRO: A rentabilidade média NÃO pode ser negativa!");
+            } else {
+                break;
+            }
+        }
+
+        // ---------------------
+        // VALOR ATUAL (não aceita negativo)
+        // ---------------------
+        double valorAtual;
+        while (true) {
+            System.out.print("Valor Atual: ");
+            valorAtual = Utils.lerDouble(scanner);
+
+            if (valorAtual <= 0) {
+                System.out.println("ERRO: O valor atual NÃO pode ser negativo!");
+            } else {
+                break;
+            }
+        }
+
+        // ---------------------
+        // VARIAÇÃO PERCENTUAL (aceita negativos)
+        // ---------------------
+        double variacaoPercentual;
+        while (true) {
+            System.out.print("Variação Percentual (%): ");
+            variacaoPercentual = Utils.lerDouble(scanner);
+            break; // Aceita valores negativos, 0 e positivos
+        }
+
+        Ativo ativo = new Ativo(
+                codigo, nome, tipo, risco,
+                rentabilidadeMedia, valorAtual,
+                variacaoPercentual, 0
+        );
+
+        cadastrarAtivo(ativo);
+        System.out.println("Ativo cadastrado com sucesso!");
+    }
+
+
+    private void listarAtivos() {
+        if (listaAtivos.isEmpty()) {
+            System.out.println("Nenhum ativo cadastrado.");
+            return;
+        }
+
+        Node<Ativo> atual = listaAtivos.getHead();
+        int i = 1;
+
+        while (atual != null) {
+            Ativo a = atual.getData();
+            System.out.printf("%d) Código: %s - Nome: %s - Tipo: %s - Risco: %s - Valor Atual: %.2f%n",
+                    i++, a.getCodigo(), a.getNome(), a.getTipo(), a.getRisco(), a.getValorAtual());
+            atual = atual.getNext();
+        }
+    }
+
+    private void buscarPorNome(Scanner scanner) {
+        System.out.print("Digite o nome do ativo: ");
+        String nomeBusca = Utils.lerTexto(scanner);
+
+        Ativo encontrado = new BuscaAtivos().buscaLinear(listaAtivos, nomeBusca);
+
+        if (encontrado != null) {
+            System.out.printf("Ativo encontrado: Código: %s - Nome: %s - Tipo: %s - Valor Atual: %.2f%n",
+                    encontrado.getCodigo(), encontrado.getNome(), encontrado.getTipo(), encontrado.getValorAtual());
+        } else {
+            System.out.println("Ativo NÃO encontrado.");
+        }
+    }
+
+    private void buscarPorCodigo(Scanner scanner) {
+        System.out.print("Digite o código do ativo: ");
+        String codigoBusca = Utils.lerTexto(scanner);
+
+        Ativo encontrado = new BuscaAtivos().buscaBinaria(listaAtivos, codigoBusca);
+
+        if (encontrado != null) {
+            System.out.printf("Ativo encontrado: Código: %s - Nome: %s - Tipo: %s - Valor Atual: %.2f%n",
+                    encontrado.getCodigo(), encontrado.getNome(), encontrado.getTipo(), encontrado.getValorAtual());
+        } else {
+            System.out.println("Ativo NÃO encontrado.");
+        }
     }
 }

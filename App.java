@@ -36,7 +36,7 @@ public class App {
                     sistemaInvestidores.menuInvestidores(scanner, sistemaAtivos);
                     break;
                 case 3:
-                    sistemaRecomendacoes.menuRecomendacoes(scanner);
+                    sistemaRecomendacoes.menuRecomendacoes(scanner, sistemaAtivos.getListaAtivos(), sistemaInvestidores.getListaInvestidores());
                     break;
                 case 4:
                     sistemaTransacoes.menuTransacoes(scanner);

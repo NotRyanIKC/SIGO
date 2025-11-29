@@ -15,14 +15,15 @@ public class SistemaRecomendacoes {
         return listaRecomendacoes;
     }
 
-    public void menuRecomendacoes(Scanner scanner) {
+    public void menuRecomendacoes(Scanner scanner, DLL<Ativo> listaAtivos, DLL<Investidor> listaInvestidores) {
         int opcRecomendacao;
         do {
             System.out.println("\nMenu Recomendacoes:");
-            System.out.println("1. Adicionar Recomendacao");
+            System.out.println("1. Gerar Recomendacoes para um Investidor");
             System.out.println("2. Listar Recomendacoes");
             System.out.println("0. Voltar");
             System.out.print("Escolha uma opcao: ");
+            
             while (!scanner.hasNextInt()) {
                 System.out.println("Digite um numero valido.");
                 scanner.next();
@@ -32,11 +33,27 @@ public class SistemaRecomendacoes {
 
             switch (opcRecomendacao) {
                 case 1:
-                    System.out.print("Descricao da recomendacao: ");
-                    String descricao = scanner.nextLine();
-                    Recomendacao recomendacao = new Recomendacao(null, descricao, descricao, true);
-                    adicionarRecomendacao(recomendacao);
-                    System.out.println("Recomendacao adicionada com sucesso.");
+                    if (listaInvestidores.isEmpty()) {
+                        System.out.println("Nenhum investidor cadastrado.");
+                        break;
+                    }
+                    System.out.println("\nEscolha um investidor:");
+                    Node<Investidor> nodeInv = listaInvestidores.getHead();
+                    int idx = 1;
+                    while (nodeInv != null) {
+                        Investidor inv = nodeInv.getData();
+                        System.out.printf("%d) %s%n", idx++, inv.getNome());
+                        nodeInv = nodeInv.getNext();
+                    }
+                    System.out.print("Numero do investidor: ");
+                    int sel = scanner.nextInt() - 1;
+                    scanner.nextLine();
+                    if (sel < 0 || sel >= listaInvestidores.size()) {
+                        System.out.println("Investidor invalido.");
+                        break;
+                    }
+                    Investidor investidor = listaInvestidores.get(sel);
+                    gerarRecomendacoes(investidor, listaAtivos);
                     break;
 
                 case 2:
@@ -62,18 +79,58 @@ public class SistemaRecomendacoes {
     }
 
     public void gerarRecomendacoes(Investidor investidor, DLL<Ativo> listaAtivos) {
-        System.out.println("Recomendacoes para o investidor " + investidor.getNome() + ":");
+        System.out.println("\nRecomendacoes para o investidor " + investidor.getNome() + ":");
         Node<Ativo> atual = listaAtivos.getHead();
+        DLL<String> tiposSugeridos = new DLL<>();
 
         while (atual != null) {
             Ativo ativo = atual.getData();
 
-            if (ativo.getRisco().equalsIgnoreCase(investidor.getPerfilRisco())
-                    && ativo.getRentabilidadeMedia() > 1.0
-                    && ativo.getVariacaoPercentual() < 10.0) {
-                System.out.printf("Ativo: %s | Rentabilidade: %.2f%% | Risco: %s%n",
-                        ativo.getNome(), ativo.getRentabilidadeMedia(), ativo.getRisco());
+            // 1. Compatibilidade de risco
+            if (!ativo.getRisco().equalsIgnoreCase(investidor.getPerfilRisco())
+                    && !investidor.getPerfilRisco().equalsIgnoreCase("arrojado")) {
+                atual = atual.getNext();
+                continue;
             }
+
+            // 2. Rentabilidade mínima (ex: 5%)
+            if (ativo.getRentabilidadeMedia() < 5.0) {
+                atual = atual.getNext();
+                continue;
+            }
+
+            // 3. Volatilidade controlada
+            double maxVariacao = 0;
+            switch (investidor.getPerfilRisco().toLowerCase()) {
+                case "conservador": maxVariacao = 10; break;
+                case "moderado": maxVariacao = 30; break;
+                case "arrojado": maxVariacao = Double.MAX_VALUE; break;
+            }
+            if (Math.abs(ativo.getVariacaoPercentual()) > maxVariacao) {
+                atual = atual.getNext();
+                continue;
+            }
+
+            // 4. Diversificação: evitar repetir o mesmo tipo consecutivo
+            Node<String> tipoNode = tiposSugeridos.getHead();
+            boolean tipoRepetido = false;
+            while (tipoNode != null) {
+                if (tipoNode.getData().equalsIgnoreCase(ativo.getTipo())) {
+                    tipoRepetido = true;
+                    break;
+                }
+                tipoNode = tipoNode.getNext();
+            }
+            if (tipoRepetido) {
+                atual = atual.getNext();
+                continue;
+            }
+
+            // Adiciona à lista de recomendações temporária
+            tiposSugeridos.add(ativo.getTipo());
+            System.out.printf("Ativo: %s | Tipo: %s | Rentabilidade: %.2f%% | Risco: %s | Variacao: %.2f%%%n",
+                    ativo.getNome(), ativo.getTipo(), ativo.getRentabilidadeMedia(),
+                    ativo.getRisco(), ativo.getVariacaoPercentual());
 
             atual = atual.getNext();
         }
