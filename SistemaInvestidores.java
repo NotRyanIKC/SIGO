@@ -133,6 +133,7 @@ public class SistemaInvestidores {
             System.out.println("2. Listar Investidores");
             System.out.println("3. Fazer Investimento");
             System.out.println("4. Ver histórico de investimentos");
+            System.out.println("5. Venda de Ativo (Resgate)");
             System.out.println("0. Voltar");
             System.out.print("Escolha uma opcao: ");
 
@@ -328,6 +329,82 @@ public class SistemaInvestidores {
 
                     Investidor investidorSelecionadoHist = listaInvestidores.get(investidorHistIndex);
                     verHistorico(investidorSelecionadoHist);
+                    break;
+
+                // -----------------------------------------
+                // 5 - VENDA DE ATIVO (RESGATE)
+                // -----------------------------------------
+                case 5:
+                    // Venda de Ativo (Resgate) — seleciona investidor e ativo por índice e chama resgatarInvestimento
+                    if (listaInvestidores.isEmpty()) {
+                        System.out.println("Nenhum investidor cadastrado.");
+                        break;
+                    }
+
+                    System.out.println("\nLista de Investidores:");
+                    Node<Investidor> atualVendaInv = listaInvestidores.getHead();
+                    int idxVenda = 1;
+                    while (atualVendaInv != null) {
+                        Investidor inv = atualVendaInv.getData();
+                        System.out.printf("%d) %s - Capital Disponível: %.2f%n", idxVenda++, inv.getNome(), inv.getCapitalDisponivel());
+                        atualVendaInv = atualVendaInv.getNext();
+                    }
+
+                    System.out.print("Escolha o número do investidor: ");
+                    int investidorVendaIndex = scanner.nextInt() - 1;
+                    scanner.nextLine();
+
+                    if (investidorVendaIndex < 0 || investidorVendaIndex >= listaInvestidores.size()) {
+                        System.out.println("Investidor inválido.");
+                        break;
+                    }
+
+                    Investidor investidorSelecionadoVenda = listaInvestidores.get(investidorVendaIndex);
+
+                    DLL<Ativo> listaAtivosVenda = sistemaAtivos.getListaAtivos();
+                    if (listaAtivosVenda.isEmpty()) {
+                        System.out.println("Nenhum ativo cadastrado.");
+                        break;
+                    }
+
+                    System.out.println("\nLista de Ativos:");
+                    Node<Ativo> atualAtivoVenda = listaAtivosVenda.getHead();
+                    int jVenda = 1;
+                    while (atualAtivoVenda != null) {
+                        Ativo a = atualAtivoVenda.getData();
+                        System.out.printf("%d) %s - %s - Risco: %s - Valor Atual: %.2f%n",
+                                jVenda++, a.getCodigo(), a.getNome(), a.getRisco(), a.getValorAtual());
+                        atualAtivoVenda = atualAtivoVenda.getNext();
+                    }
+
+                    System.out.print("Escolha o número do ativo: ");
+                    int ativoVendaIndex = scanner.nextInt() - 1;
+                    scanner.nextLine();
+
+                    if (ativoVendaIndex < 0 || ativoVendaIndex >= listaAtivosVenda.size()) {
+                        System.out.println("Ativo inválido.");
+                        break;
+                    }
+
+                    Ativo ativoSelecionadoVenda = listaAtivosVenda.get(ativoVendaIndex);
+
+                    double valorResgatar;
+                    while (true) {
+                        System.out.print("Valor a resgatar: ");
+                        try {
+                            valorResgatar = Double.parseDouble(scanner.nextLine());
+                            if (valorResgatar <= 0) {
+                                System.out.println("O valor deve ser maior que zero.");
+                                continue;
+                            }
+                            break;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Digite um valor numérico válido.");
+                        }
+                    }
+
+                    // Chama o método já existente
+                    resgatarInvestimento(investidorSelecionadoVenda, ativoSelecionadoVenda, valorResgatar);
                     break;
 
                 case 0:
