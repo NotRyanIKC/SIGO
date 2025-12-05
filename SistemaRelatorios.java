@@ -1,6 +1,7 @@
 import java.util.Scanner;
 
 public class SistemaRelatorios {
+
     public void top5Rentabilidade(DLL<Ativo> listaAtivos) {
         long inicio = System.nanoTime();
         if (listaAtivos == null || listaAtivos.isEmpty()) {
@@ -42,7 +43,7 @@ public class SistemaRelatorios {
         double fator;
         if (risco.equals("baixo")) {
             fator = 1.0;
-        } else if (risco.equals("moderado")) {
+        } else if (risco.equals("medio")) {
             fator = 1.3;
         } else if (risco.equals("alto")) {
             fator = 1.6;
@@ -116,15 +117,29 @@ public class SistemaRelatorios {
         while (atual != null) {
             Investimento investimento = atual.getData();
             Ativo a = investimento.getAtivo();
-            double valorAplicado = investimento.getValorAplicado();
-            double valorAtual = a.getValorAtual() * (valorAplicado / investimento.getValorInicial());
-            double lucroAtual = valorAtual - valorAplicado;
 
-            totalAplicado += valorAplicado;
-            totalAtual += valorAtual;
+            double principal = investimento.getValorAplicado();
+            if (principal <= 0) {
+                atual = atual.getNext();
+                continue;
+            }
 
-            System.out.printf("Ativo: %s - %s | Tipo: %s | Valor aplicado: %.2f | Valor atual estimado: %.2f | Lucro/Prejuizo: %.2f%n",
-                    a.getCodigo(), a.getNome(), a.getTipo(), valorAplicado, valorAtual, lucroAtual);
+            double valorInicial = investimento.getValorInicial();
+            double fatorPreco = 1.0;
+            if (valorInicial > 0) {
+                fatorPreco = a.getValorAtual() / valorInicial;
+            }
+
+            double valorMercado = principal * fatorPreco;
+            double lucroAtual = valorMercado - principal;
+
+            totalAplicado += principal;
+            totalAtual += valorMercado;
+
+            System.out.printf(
+                    "Ativo: %s - %s | Tipo: %s | Valor aplicado: %.2f | Valor de mercado: %.2f | Lucro/Prejuizo: %.2f%n",
+                    a.getCodigo(), a.getNome(), a.getTipo(), principal, valorMercado, lucroAtual
+            );
 
             String tipo = a.getTipo();
             int idx = -1;
@@ -136,23 +151,28 @@ public class SistemaRelatorios {
             }
             if (idx == -1) {
                 tipos[countTipos] = tipo;
-                valoresPorTipo[countTipos] = valorAplicado;
+                valoresPorTipo[countTipos] = valorMercado;
                 countTipos++;
             } else {
-                valoresPorTipo[idx] += valorAplicado;
+                valoresPorTipo[idx] += valorMercado;
             }
 
             atual = atual.getNext();
         }
 
+        if (totalAplicado == 0) {
+            System.out.println("Nenhum saldo aplicado.");
+            return;
+        }
+
         double lucroTotal = totalAtual - totalAplicado;
         System.out.printf("Total aplicado: %.2f%n", totalAplicado);
-        System.out.printf("Valor atual estimado: %.2f%n", totalAtual);
+        System.out.printf("Valor de mercado total: %.2f%n", totalAtual);
         System.out.printf("Lucro/Prejuizo total estimado: %.2f%n", lucroTotal);
 
         System.out.println("Distribuicao do portfólio por tipo de ativo:");
         for (int i = 0; i < countTipos; i++) {
-            double perc = (valoresPorTipo[i] / totalAplicado) * 100.0;
+            double perc = (valoresPorTipo[i] / totalAtual) * 100.0;
             System.out.printf("%s: %.2f%% (%.2f)%n", tipos[i], perc, valoresPorTipo[i]);
         }
     }
@@ -174,15 +194,9 @@ public class SistemaRelatorios {
             scanner.nextLine();
 
             switch (opcRelatorio) {
-                case 1:
-                    top5Rentabilidade(sistemaAtivos.getListaAtivos());
-                    break;
-
-                case 2:
-                    top5RiscoRetorno(sistemaAtivos.getListaAtivos());
-                    break;
-
-                case 3:
+                case 1 -> top5Rentabilidade(sistemaAtivos.getListaAtivos());
+                case 2 -> top5RiscoRetorno(sistemaAtivos.getListaAtivos());
+                case 3 -> {
                     System.out.println("Lista de Investidores:");
                     DLL<Investidor> listaInvestidores = sistemaInvestidores.getListaInvestidores();
                     if (listaInvestidores.isEmpty()) {
@@ -204,13 +218,9 @@ public class SistemaRelatorios {
                     }
                     Investidor investidorSelecionado = listaInvestidores.get(investidorIndex);
                     relatorioInvestidor(investidorSelecionado);
-                    break;
-
-                case 0:
-                    break;
-
-                default:
-                    System.out.println("Opcao invalida. Tente novamente.");
+                }
+                case 0 -> { }
+                default -> System.out.println("Opcao invalida. Tente novamente.");
             }
         } while (opcRelatorio != 0);
     }

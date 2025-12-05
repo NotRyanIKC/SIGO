@@ -11,6 +11,37 @@ public class SistemaInvestidores {
         listaInvestidores.add(investidor);
     }
 
+    // ------------------------------
+    // NÍVEIS DE RISCO
+    // ------------------------------
+    private int nivelRiscoAtivo(String risco) {
+        if (risco == null) return 0;
+        risco = risco.toLowerCase();
+        return switch (risco) {
+            case "baixo" -> 1;
+            case "medio" -> 2;
+            case "alto"  -> 3;
+            default      -> 0;
+        };
+    }
+
+    private int nivelRiscoPerfil(String perfil) {
+        if (perfil == null) return 0;
+        perfil = perfil.toLowerCase();
+        return switch (perfil) {
+            case "conservador" -> 1;
+            case "moderado"    -> 2;
+            case "arrojado"    -> 3;
+            default            -> 0;
+        };
+    }
+
+    private boolean riscoAtivoAcimaDoPerfil(Investidor inv, Ativo ativo) {
+        int nAtivo  = nivelRiscoAtivo(ativo.getRisco());
+        int nPerfil = nivelRiscoPerfil(inv.getPerfilRisco());
+        return nAtivo > nPerfil;
+    }
+
     // -----------------------------------------
     // FAZER INVESTIMENTO COM VALIDAÇÕES
     // -----------------------------------------
@@ -21,13 +52,14 @@ public class SistemaInvestidores {
             return false;
         }
 
-        if (!ativo.getRisco().equalsIgnoreCase(inv.getPerfilRisco())
-                && !inv.getPerfilRisco().equalsIgnoreCase("arrojado")) {
-            System.out.printf("ATENÇÃO: O risco do ativo (%s) não se encaixa no seu perfil (%s). Deseja continuar? (S/N): ",
+        // compatibilidade de risco usando níveis
+        if (riscoAtivoAcimaDoPerfil(inv, ativo)) {
+            System.out.printf(
+                    "ATENÇÃO: O risco do ativo (%s) é superior ao seu perfil (%s). Deseja continuar? (S/N): ",
                     ativo.getRisco(), inv.getPerfilRisco());
-            Scanner scanner = new Scanner(System.in);
-            String resposta = scanner.nextLine().trim().toUpperCase();
-            if (!resposta.equals("S")) {
+            Scanner scannerConfirma = new Scanner(System.in);
+            String resposta = scannerConfirma.nextLine().trim().toUpperCase();
+            if (!"S".equals(resposta)) {
                 System.out.println("Investimento cancelado pelo usuário.");
                 return false;
             }
@@ -35,7 +67,7 @@ public class SistemaInvestidores {
 
         if (ativo.getRisco().equalsIgnoreCase("alto")
                 && valor > inv.getCapitalDisponivel() * 0.8) {
-            System.out.println("Nao é permitido investir mais de 80% do capital disponivel em ativos de risco alto.");
+            System.out.println("Não é permitido investir mais de 80% do capital disponível em ativos de risco alto.");
             return false;
         }
 
@@ -44,9 +76,9 @@ public class SistemaInvestidores {
             return false;
         }
 
-        double valorInicial = ativo.getValorAtual();
+        double valorInicialUnitario = ativo.getValorAtual();
 
-        Investimento investimento = new Investimento(ativo, valor, valorInicial, 0);
+        Investimento investimento = new Investimento(ativo, valor, valorInicialUnitario, 0);
         inv.getHistoricoInvestimentos().add(investimento);
 
         inv.setCapitalDisponivel(inv.getCapitalDisponivel() - valor);
@@ -57,39 +89,64 @@ public class SistemaInvestidores {
 
     // -----------------------------------------
     // RESGATAR INVESTIMENTO COM VALIDAÇÕES
+    // valorResgatar = principal; sistema paga principal + lucro/prejuízo
     // -----------------------------------------
-    public boolean resgatarInvestimento(Investidor inv, Ativo ativo, double valor) {
+    public boolean resgatarInvestimento(Investidor inv, Ativo ativo, double valorResgatar) {
 
-        if (valor <= 0) {
+        if (valorResgatar <= 0) {
             System.out.println("O valor do resgate deve ser maior que zero.");
             return false;
         }
 
         DLL<Investimento> historico = inv.getHistoricoInvestimentos();
+        if (historico.isEmpty()) {
+            System.out.println("O investidor não possui investimentos.");
+            return false;
+        }
+
         Node<Investimento> atual = historico.getHead();
 
         while (atual != null) {
             Investimento investimento = atual.getData();
+
             if (investimento.getAtivo().equals(ativo)) {
 
-                if (valor > investimento.getValorAplicado()) {
-                    System.out.println("Valor de resgate maior que o valor aplicado.");
+                if (valorResgatar > investimento.getValorAplicado()) {
+                    System.out.println("Valor de resgate maior que o valor ainda aplicado nesse ativo.");
                     return false;
                 }
 
-                double proporcao = valor / investimento.getValorAplicado();
-                double lucroPrejuizo = (ativo.getValorAtual() - investimento.getValorInicial()) * proporcao;
+                double valorInicialUnitario = investimento.getValorInicial();
+                double valorAtualUnitario = ativo.getValorAtual();
 
-                investimento.setValorAplicado(investimento.getValorAplicado() - valor);
-                inv.setCapitalDisponivel(inv.getCapitalDisponivel() + valor + lucroPrejuizo);
+                if (valorInicialUnitario <= 0) {
+                    System.out.println("Valor inicial inválido para o investimento.");
+                    return false;
+                }
 
-                System.out.printf("Resgate realizado com sucesso! Lucro/Prejuízo: R$ %.2f%n", lucroPrejuizo);
+                double fatorPreco = valorAtualUnitario / valorInicialUnitario;
+                double variacaoPercentual = (fatorPreco - 1.0) * 100.0;
+
+                double lucroPrejuizo = valorResgatar * (fatorPreco - 1.0);
+
+                investimento.setValorAplicado(investimento.getValorAplicado() - valorResgatar);
+                investimento.setLucroPrejuizoAcumulado(
+                        investimento.getLucroPrejuizoAcumulado() + lucroPrejuizo
+                );
+
+                inv.setCapitalDisponivel(inv.getCapitalDisponivel() + valorResgatar + lucroPrejuizo);
+
+                System.out.printf(
+                        "Resgate realizado com sucesso! Variação do ativo: %.2f%% | Lucro/Prejuízo deste resgate: R$ %.2f%n",
+                        variacaoPercentual, lucroPrejuizo);
+
                 return true;
             }
+
             atual = atual.getNext();
         }
 
-        System.out.println("Investimento não encontrado.");
+        System.out.println("Investimento não encontrado para esse ativo.");
         return false;
     }
 
@@ -114,12 +171,50 @@ public class SistemaInvestidores {
 
         while (atual != null) {
             Investimento invst = atual.getData();
-            double lucroPrejuizo = invst.getAtivo().getValorAtual() - invst.getValorAplicado();
-            System.out.printf("%d) Ativo: %s | Valor Investido: %.2f | Valor Atual: %.2f | Lucro/Prejuízo: %.2f%n",
-                    i++, invst.getAtivo().getNome(), invst.getValorAplicado(),
-                    invst.getAtivo().getValorAtual(), lucroPrejuizo);
+
+            double saldoPrincipal = invst.getValorAplicado();
+            double valorInicialUnitario = invst.getValorInicial();
+            double valorAtualUnitario = invst.getAtivo().getValorAtual();
+
+            double fatorPreco = 0.0;
+            if (valorInicialUnitario > 0) {
+                fatorPreco = valorAtualUnitario / valorInicialUnitario;
+            }
+
+            double variacaoPercentual = (fatorPreco - 1.0) * 100.0;
+            double valorMercado = saldoPrincipal * fatorPreco;
+            double lucroPrejuizoPotencial = valorMercado - saldoPrincipal;
+
+            System.out.printf(
+                    "%d) Ativo: %s | Saldo aplicado (principal): R$ %.2f | Valor de mercado: R$ %.2f | Variação: %.2f%% | Lucro/Prejuízo potencial: R$ %.2f | Lucro/Prejuízo realizado: R$ %.2f%n",
+                    i++,
+                    invst.getAtivo().getNome(),
+                    saldoPrincipal,
+                    valorMercado,
+                    variacaoPercentual,
+                    lucroPrejuizoPotencial,
+                    invst.getLucroPrejuizoAcumulado()
+            );
+
             atual = atual.getNext();
         }
+    }
+
+    // -----------------------------------------
+    // BUSCAR INVESTIMENTO DE UM INVESTIDOR EM UM ATIVO
+    // -----------------------------------------
+    private Investimento buscarInvestimento(Investidor inv, Ativo ativo) {
+        DLL<Investimento> historico = inv.getHistoricoInvestimentos();
+        Node<Investimento> atual = historico.getHead();
+
+        while (atual != null) {
+            Investimento investimento = atual.getData();
+            if (investimento.getAtivo().equals(ativo)) {
+                return investimento;
+            }
+            atual = atual.getNext();
+        }
+        return null;
     }
 
     // -----------------------------------------
@@ -146,9 +241,6 @@ public class SistemaInvestidores {
 
             switch (opcInvestidor) {
 
-                // -----------------------------------------
-                // 1 - CADASTRAR INVESTIDOR
-                // -----------------------------------------
                 case 1:
                     System.out.print("Nome: ");
                     String nome = scanner.nextLine();
@@ -182,7 +274,6 @@ public class SistemaInvestidores {
                         break;
                     }
 
-                    // CAPITAL COM VALIDAÇÃO
                     double capital;
                     while (true) {
                         System.out.print("Capital disponível: ");
@@ -203,9 +294,6 @@ public class SistemaInvestidores {
                     System.out.println("Investidor cadastrado com sucesso.");
                     break;
 
-                // -----------------------------------------
-                // 2 - LISTAR
-                // -----------------------------------------
                 case 2:
                     if (listaInvestidores.isEmpty()) {
                         System.out.println("Nenhum investidor cadastrado.");
@@ -216,16 +304,17 @@ public class SistemaInvestidores {
                     int i = 1;
 
                     while (atual != null) {
-                        Investidor inv = atual.getData();
+                        Investidor invLista = atual.getData();
                         System.out.printf("%d) %s - Idade: %s - Perfil: %s - Capital: %.2f%n",
-                                i++, inv.getNome(), inv.getIdade(), inv.getPerfilRisco(), inv.getCapitalDisponivel());
+                                i++,
+                                invLista.getNome(),
+                                invLista.getIdade(),
+                                invLista.getPerfilRisco(),
+                                invLista.getCapitalDisponivel());
                         atual = atual.getNext();
                     }
                     break;
 
-                // -----------------------------------------
-                // 3 - FAZER INVESTIMENTO
-                // -----------------------------------------
                 case 3:
                     if (listaInvestidores.isEmpty()) {
                         System.out.println("Nenhum investidor cadastrado.");
@@ -237,9 +326,9 @@ public class SistemaInvestidores {
                     int idx = 1;
 
                     while (atualInv != null) {
-                        Investidor inv = atualInv.getData();
+                        Investidor invItem = atualInv.getData();
                         System.out.printf("%d) %s - Capital Disponível: %.2f%n",
-                                idx++, inv.getNome(), inv.getCapitalDisponivel());
+                                idx++, invItem.getNome(), invItem.getCapitalDisponivel());
                         atualInv = atualInv.getNext();
                     }
 
@@ -301,7 +390,6 @@ public class SistemaInvestidores {
                     fazerInvestimento(investidorSelecionado, ativoSelecionado, valorInvestir);
                     break;
 
-
                 case 4:
                     if (listaInvestidores.isEmpty()) {
                         System.out.println("Nenhum investidor cadastrado.");
@@ -331,11 +419,7 @@ public class SistemaInvestidores {
                     verHistorico(investidorSelecionadoHist);
                     break;
 
-                // -----------------------------------------
-                // 5 - VENDA DE ATIVO (RESGATE)
-                // -----------------------------------------
                 case 5:
-                    // Venda de Ativo (Resgate) — seleciona investidor e ativo por índice e chama resgatarInvestimento
                     if (listaInvestidores.isEmpty()) {
                         System.out.println("Nenhum investidor cadastrado.");
                         break;
@@ -345,8 +429,9 @@ public class SistemaInvestidores {
                     Node<Investidor> atualVendaInv = listaInvestidores.getHead();
                     int idxVenda = 1;
                     while (atualVendaInv != null) {
-                        Investidor inv = atualVendaInv.getData();
-                        System.out.printf("%d) %s - Capital Disponível: %.2f%n", idxVenda++, inv.getNome(), inv.getCapitalDisponivel());
+                        Investidor invVenda = atualVendaInv.getData();
+                        System.out.printf("%d) %s - Capital Disponível: %.2f%n",
+                                idxVenda++, invVenda.getNome(), invVenda.getCapitalDisponivel());
                         atualVendaInv = atualVendaInv.getNext();
                     }
 
@@ -371,9 +456,9 @@ public class SistemaInvestidores {
                     Node<Ativo> atualAtivoVenda = listaAtivosVenda.getHead();
                     int jVenda = 1;
                     while (atualAtivoVenda != null) {
-                        Ativo a = atualAtivoVenda.getData();
+                        Ativo aVenda = atualAtivoVenda.getData();
                         System.out.printf("%d) %s - %s - Risco: %s - Valor Atual: %.2f%n",
-                                jVenda++, a.getCodigo(), a.getNome(), a.getRisco(), a.getValorAtual());
+                                jVenda++, aVenda.getCodigo(), aVenda.getNome(), aVenda.getRisco(), aVenda.getValorAtual());
                         atualAtivoVenda = atualAtivoVenda.getNext();
                     }
 
@@ -388,22 +473,67 @@ public class SistemaInvestidores {
 
                     Ativo ativoSelecionadoVenda = listaAtivosVenda.get(ativoVendaIndex);
 
-                    double valorResgatar;
-                    while (true) {
-                        System.out.print("Valor a resgatar: ");
-                        try {
-                            valorResgatar = Double.parseDouble(scanner.nextLine());
-                            if (valorResgatar <= 0) {
-                                System.out.println("O valor deve ser maior que zero.");
-                                continue;
-                            }
-                            break;
-                        } catch (NumberFormatException e) {
-                            System.out.println("Digite um valor numérico válido.");
-                        }
+                    Investimento investimentoVenda = buscarInvestimento(investidorSelecionadoVenda, ativoSelecionadoVenda);
+                    if (investimentoVenda == null) {
+                        System.out.println("Este investidor não possui investimento neste ativo.");
+                        break;
                     }
 
-                    // Chama o método já existente
+                    double saldoPrincipal = investimentoVenda.getValorAplicado();
+                    double valorInicialUnitario = investimentoVenda.getValorInicial();
+                    double valorAtualUnitario = ativoSelecionadoVenda.getValorAtual();
+
+                    if (valorInicialUnitario <= 0) {
+                        System.out.println("Valor inicial inválido para o investimento.");
+                        break;
+                    }
+
+                    double fatorPreco = valorAtualUnitario / valorInicialUnitario;
+                    double valorMercadoDisponivel = saldoPrincipal * fatorPreco;
+
+                    System.out.printf(
+                            "Saldo aplicado (principal): R$ %.2f | Valor de mercado disponível para resgate: R$ %.2f%n",
+                            saldoPrincipal, valorMercadoDisponivel
+                    );
+
+                    System.out.println("1) Resgatar TODO o investimento");
+                    System.out.println("2) Resgatar parte do principal");
+                    System.out.print("Escolha uma opção: ");
+
+                    int opcResgate;
+                    while (!scanner.hasNextInt()) {
+                        System.out.println("Digite um número válido.");
+                        scanner.next();
+                    }
+                    opcResgate = scanner.nextInt();
+                    scanner.nextLine();
+
+                    double valorResgatar;
+                    if (opcResgate == 1) {
+                        valorResgatar = saldoPrincipal;
+                    } else if (opcResgate == 2) {
+                        while (true) {
+                            System.out.print("Valor (principal) a resgatar (até " + saldoPrincipal + "): ");
+                            try {
+                                valorResgatar = Double.parseDouble(scanner.nextLine());
+                                if (valorResgatar <= 0) {
+                                    System.out.println("O valor deve ser maior que zero.");
+                                    continue;
+                                }
+                                if (valorResgatar > saldoPrincipal) {
+                                    System.out.println("Não pode resgatar mais do que o saldo aplicado.");
+                                    continue;
+                                }
+                                break;
+                            } catch (NumberFormatException e) {
+                                System.out.println("Digite um valor numérico válido.");
+                            }
+                        }
+                    } else {
+                        System.out.println("Opção de resgate inválida.");
+                        break;
+                    }
+
                     resgatarInvestimento(investidorSelecionadoVenda, ativoSelecionadoVenda, valorResgatar);
                     break;
 

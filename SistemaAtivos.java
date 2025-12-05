@@ -1,3 +1,4 @@
+import java.util.Random;
 import java.util.Scanner;
 
 public class SistemaAtivos {
@@ -27,33 +28,19 @@ public class SistemaAtivos {
             System.out.println("2. Listar Ativos");
             System.out.println("3. Buscar Ativo por Nome");
             System.out.println("4. Buscar Ativo por Código");
+            System.out.println("5. Simular ciclo de mercado (atualizar valores)");
             System.out.println("0. Voltar");
 
-            opcAtivo = Utils.lerOpcao(scanner, 0, 4);
+            opcAtivo = Utils.lerOpcao(scanner, 0, 5);
 
             switch (opcAtivo) {
-
-                case 1:
-                    cadastrarAtivoMenu(scanner);
-                    break;
-
-                case 2:
-                    listarAtivos();
-                    break;
-
-                case 3:
-                    buscarPorNome(scanner);
-                    break;
-
-                case 4:
-                    buscarPorCodigo(scanner);
-                    break;
-
-                case 0:
-                    break;
-
-                default:
-                    System.out.println("Opção inválida.");
+                case 1 -> cadastrarAtivoMenu(scanner);
+                case 2 -> listarAtivos();
+                case 3 -> buscarPorNome(scanner);
+                case 4 -> buscarPorCodigo(scanner);
+                case 5 -> simularCicloMercado();
+                case 0 -> { }
+                default -> System.out.println("Opção inválida.");
             }
 
         } while (opcAtivo != 0);
@@ -68,7 +55,7 @@ public class SistemaAtivos {
         String nome = Utils.lerTexto(scanner);
 
         // ---------------------
-        // VALIDAÇÃO DO TIPO COM A/B/C
+        // TIPO
         // ---------------------
         String tipo = "";
         while (true) {
@@ -81,24 +68,19 @@ public class SistemaAtivos {
             String opc = scanner.nextLine().trim().toUpperCase();
 
             switch (opc) {
-                case "A":
-                    tipo = "Ação";
-                    break;
-                case "B":
-                    tipo = "Renda Fixa";
-                    break;
-                case "C":
-                    tipo = "Cripto";
-                    break;
-                default:
+                case "A" -> tipo = "Ação";
+                case "B" -> tipo = "Renda Fixa";
+                case "C" -> tipo = "Cripto";
+                default -> {
                     System.out.println("ERRO: Opção inválida! Digite A, B ou C.");
                     continue;
+                }
             }
             break;
         }
 
         // ---------------------
-        // VALIDAÇÃO DO RISCO COM A/B/C
+        // RISCO
         // ---------------------
         String risco = "";
         while (true) {
@@ -111,39 +93,34 @@ public class SistemaAtivos {
             String opc = scanner.nextLine().trim().toUpperCase();
 
             switch (opc) {
-                case "A":
-                    risco = "baixo";
-                    break;
-                case "B":
-                    risco = "medio";
-                    break;
-                case "C":
-                    risco = "alto";
-                    break;
-                default:
+                case "A" -> risco = "baixo";
+                case "B" -> risco = "medio";
+                case "C" -> risco = "alto";
+                default -> {
                     System.out.println("ERRO: Opção inválida! Digite A, B ou C.");
                     continue;
+                }
             }
             break;
         }
 
         // ---------------------
-        // RENTABILIDADE MÉDIA (não aceita negativo)
+        // RENTABILIDADE MÉDIA
         // ---------------------
         double rentabilidadeMedia;
         while (true) {
-            System.out.print("Rentabilidade Média: ");
+            System.out.print("Rentabilidade Média (%): ");
             rentabilidadeMedia = Utils.lerDouble(scanner);
 
             if (rentabilidadeMedia <= 0) {
-                System.out.println("ERRO: A rentabilidade média NÃO pode ser negativa!");
+                System.out.println("ERRO: A rentabilidade média NÃO pode ser negativa ou zero!");
             } else {
                 break;
             }
         }
 
         // ---------------------
-        // VALOR ATUAL (não aceita negativo)
+        // VALOR ATUAL
         // ---------------------
         double valorAtual;
         while (true) {
@@ -151,21 +128,17 @@ public class SistemaAtivos {
             valorAtual = Utils.lerDouble(scanner);
 
             if (valorAtual <= 0) {
-                System.out.println("ERRO: O valor atual NÃO pode ser negativo!");
+                System.out.println("ERRO: O valor atual NÃO pode ser negativo ou zero!");
             } else {
                 break;
             }
         }
 
         // ---------------------
-        // VARIAÇÃO PERCENTUAL (aceita negativos)
+        // VARIAÇÃO PERCENTUAL INICIAL (pode ser 0)
         // ---------------------
-        double variacaoPercentual;
-        while (true) {
-            System.out.print("Variação Percentual (%): ");
-            variacaoPercentual = Utils.lerDouble(scanner);
-            break; // Aceita valores negativos, 0 e positivos
-        }
+        System.out.print("Variação Percentual inicial (%): ");
+        double variacaoPercentual = Utils.lerDouble(scanner);
 
         Ativo ativo = new Ativo(
                 codigo, nome, tipo, risco,
@@ -176,7 +149,6 @@ public class SistemaAtivos {
         cadastrarAtivo(ativo);
         System.out.println("Ativo cadastrado com sucesso!");
     }
-
 
     private void listarAtivos() {
         if (listaAtivos.isEmpty()) {
@@ -189,8 +161,11 @@ public class SistemaAtivos {
 
         while (atual != null) {
             Ativo a = atual.getData();
-            System.out.printf("%d) Código: %s - Nome: %s - Tipo: %s - Risco: %s - Valor Atual: %.2f%n",
-                    i++, a.getCodigo(), a.getNome(), a.getTipo(), a.getRisco(), a.getValorAtual());
+            System.out.printf(
+                "%d) Código: %s - Nome: %s - Tipo: %s - Risco: %s - Valor Atual: %.2f - Var%% último ciclo: %.2f - Ciclos negativos: %d%n",
+                i++, a.getCodigo(), a.getNome(), a.getTipo(), a.getRisco(),
+                a.getValorAtual(), a.getVariacaoPercentual(), a.getCiclosNegativos()
+            );
             atual = atual.getNext();
         }
     }
@@ -221,5 +196,31 @@ public class SistemaAtivos {
         } else {
             System.out.println("Ativo NÃO encontrado.");
         }
+    }
+
+    /**
+     * Simula um ciclo de mercado:
+     * cada ativo recebe uma variação aleatória entre -10% e +10%.
+     * Atualiza valorAtual, variacaoPercentual e ciclosNegativos.
+     */
+    private void simularCicloMercado() {
+        if (listaAtivos.isEmpty()) {
+            System.out.println("Nenhum ativo cadastrado.");
+            return;
+        }
+
+        Random random = new Random();
+        Node<Ativo> atual = listaAtivos.getHead();
+
+        while (atual != null) {
+            Ativo a = atual.getData();
+
+            double variacao = -10.0 + 20.0 * random.nextDouble(); // -10% a +10%
+            a.aplicarVariacaoPercentual(variacao);
+
+            atual = atual.getNext();
+        }
+
+        System.out.println("Ciclo de mercado aplicado: valores e variacoes atualizados.");
     }
 }
