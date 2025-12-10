@@ -5,9 +5,7 @@ public class Ativo {
     private String risco;
     private double rentabilidadeMedia;
     private double valorAtual;
-    // variação do último ciclo (pode ser negativa)
     private double variacaoPercentual;
-    // quantidade de ciclos seguidos com variação negativa
     private int ciclosNegativos;
 
     public Ativo(String codigo, String nome, String tipo, String risco,
@@ -63,7 +61,6 @@ public class Ativo {
 
     public double getVariacaoPercentual() { return variacaoPercentual; }
 
-    // agora aceita negativo, zero e positivo
     public boolean setVariacaoPercentual(double variacaoPercentual) {
         this.variacaoPercentual = variacaoPercentual;
         return true;
@@ -83,12 +80,6 @@ public class Ativo {
         this.ciclosNegativos = 0;
     }
 
-    /**
-     * Aplica uma variação percentual neste ciclo, atualizando:
-     * - valorAtual
-     * - variacaoPercentual
-     * - ciclosNegativos (penalização de confiança)
-     */
     public void aplicarVariacaoPercentual(double deltaPercentual) {
         double novoValor = this.valorAtual * (1.0 + deltaPercentual / 100.0);
         if (novoValor < 0) {

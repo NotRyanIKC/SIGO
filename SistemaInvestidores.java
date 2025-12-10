@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.time.LocalDate;
 
 public class SistemaInvestidores {
     private DLL<Investidor> listaInvestidores;
@@ -11,9 +12,6 @@ public class SistemaInvestidores {
         listaInvestidores.add(investidor);
     }
 
-    // ------------------------------
-    // NÍVEIS DE RISCO
-    // ------------------------------
     private int nivelRiscoAtivo(String risco) {
         if (risco == null) return 0;
         risco = risco.toLowerCase();
@@ -42,10 +40,7 @@ public class SistemaInvestidores {
         return nAtivo > nPerfil;
     }
 
-    // -----------------------------------------
-    // FAZER INVESTIMENTO COM VALIDAÇÕES
-    // -----------------------------------------
-    public boolean fazerInvestimento(Investidor inv, Ativo ativo, double valor) {
+    public boolean fazerInvestimento(Investidor inv, Ativo ativo, double valor, SistemaTransacoes sistemaTransacoes, Scanner scanner) {
 
         if (valor <= 0) {
             System.out.println("O valor do investimento deve ser maior que zero.");
@@ -57,8 +52,7 @@ public class SistemaInvestidores {
             System.out.printf(
                     "ATENÇÃO: O risco do ativo (%s) é superior ao seu perfil (%s). Deseja continuar? (S/N): ",
                     ativo.getRisco(), inv.getPerfilRisco());
-            Scanner scannerConfirma = new Scanner(System.in);
-            String resposta = scannerConfirma.nextLine().trim().toUpperCase();
+            String resposta = scanner.nextLine().trim().toUpperCase();
             if (!"S".equals(resposta)) {
                 System.out.println("Investimento cancelado pelo usuário.");
                 return false;
@@ -83,16 +77,14 @@ public class SistemaInvestidores {
 
         inv.setCapitalDisponivel(inv.getCapitalDisponivel() - valor);
 
+        Transacao transacao = new Transacao(inv, ativo, valor, "COMPRA", LocalDate.now().toString());
+        sistemaTransacoes.registrar(transacao);
+
         System.out.println("Investimento realizado com sucesso!");
         return true;
     }
 
-    // -----------------------------------------
-    // RESGATAR INVESTIMENTO COM VALIDAÇÕES
-    // valorResgatar = principal; sistema paga principal + lucro/prejuízo
-    // -----------------------------------------
-    public boolean resgatarInvestimento(Investidor inv, Ativo ativo, double valorResgatar) {
-
+    public boolean resgatarInvestimento(Investidor inv, Ativo ativo, double valorResgatar, SistemaTransacoes sistemaTransacoes) {
         if (valorResgatar <= 0) {
             System.out.println("O valor do resgate deve ser maior que zero.");
             return false;
@@ -110,7 +102,6 @@ public class SistemaInvestidores {
             Investimento investimento = atual.getData();
 
             if (investimento.getAtivo().equals(ativo)) {
-
                 if (valorResgatar > investimento.getValorAplicado()) {
                     System.out.println("Valor de resgate maior que o valor ainda aplicado nesse ativo.");
                     return false;
@@ -136,6 +127,9 @@ public class SistemaInvestidores {
 
                 inv.setCapitalDisponivel(inv.getCapitalDisponivel() + valorResgatar + lucroPrejuizo);
 
+                Transacao transacao = new Transacao(inv, ativo, valorResgatar, "RESGATE", LocalDate.now().toString());
+                sistemaTransacoes.registrar(transacao);
+
                 System.out.printf(
                         "Resgate realizado com sucesso! Variação do ativo: %.2f%% | Lucro/Prejuízo deste resgate: R$ %.2f%n",
                         variacaoPercentual, lucroPrejuizo);
@@ -154,9 +148,6 @@ public class SistemaInvestidores {
         return listaInvestidores;
     }
 
-    // -----------------------------------------
-    // HISTÓRICO DE INVESTIMENTOS
-    // -----------------------------------------
     private void verHistorico(Investidor inv) {
         DLL<Investimento> historico = inv.getHistoricoInvestimentos();
 
@@ -200,9 +191,6 @@ public class SistemaInvestidores {
         }
     }
 
-    // -----------------------------------------
-    // BUSCAR INVESTIMENTO DE UM INVESTIDOR EM UM ATIVO
-    // -----------------------------------------
     private Investimento buscarInvestimento(Investidor inv, Ativo ativo) {
         DLL<Investimento> historico = inv.getHistoricoInvestimentos();
         Node<Investimento> atual = historico.getHead();
@@ -217,10 +205,7 @@ public class SistemaInvestidores {
         return null;
     }
 
-    // -----------------------------------------
-    // MENU PRINCIPAL DO SISTEMA DE INVESTIDORES
-    // -----------------------------------------
-    public void menuInvestidores(Scanner scanner, SistemaAtivos sistemaAtivos) {
+    public void menuInvestidores(Scanner scanner, SistemaAtivos sistemaAtivos, SistemaTransacoes sistemaTransacoes) {
         int opcInvestidor;
         do {
             System.out.println("\nMenu Investidores:");
@@ -387,7 +372,7 @@ public class SistemaInvestidores {
                         }
                     }
 
-                    fazerInvestimento(investidorSelecionado, ativoSelecionado, valorInvestir);
+                    fazerInvestimento(investidorSelecionado, ativoSelecionado, valorInvestir, sistemaTransacoes, scanner);
                     break;
 
                 case 4:
@@ -534,7 +519,7 @@ public class SistemaInvestidores {
                         break;
                     }
 
-                    resgatarInvestimento(investidorSelecionadoVenda, ativoSelecionadoVenda, valorResgatar);
+                    resgatarInvestimento(investidorSelecionadoVenda, ativoSelecionadoVenda, valorResgatar, sistemaTransacoes);
                     break;
 
                 case 0:

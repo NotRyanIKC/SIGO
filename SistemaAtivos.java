@@ -29,9 +29,13 @@ public class SistemaAtivos {
             System.out.println("3. Buscar Ativo por Nome");
             System.out.println("4. Buscar Ativo por Código");
             System.out.println("5. Simular ciclo de mercado (atualizar valores)");
+            System.out.println("6. Ordenar por rentabilidade (Insertion Sort)");
+            System.out.println("7. Ordenar por variação (Merge Sort)");
+            System.out.println("8. Ordenar por valor atual (Quick Sort)");
+            System.out.println("9. Buscar Ativo por Tipo");
             System.out.println("0. Voltar");
 
-            opcAtivo = Utils.lerOpcao(scanner, 0, 5);
+            opcAtivo = Utils.lerOpcao(scanner, 0, 9);
 
             switch (opcAtivo) {
                 case 1 -> cadastrarAtivoMenu(scanner);
@@ -39,6 +43,19 @@ public class SistemaAtivos {
                 case 3 -> buscarPorNome(scanner);
                 case 4 -> buscarPorCodigo(scanner);
                 case 5 -> simularCicloMercado();
+                case 6 -> {
+                    OrdenacaoAtivos ordenacao = new OrdenacaoAtivos();
+                    ordenacao.ordenarPorRentabilidadeComMetricas(listaAtivos);
+                }
+                case 7 -> {
+                    OrdenacaoAtivos ordenacao = new OrdenacaoAtivos();
+                    listaAtivos = ordenacao.ordenarPorVariacaoComMetricas(listaAtivos);
+                }
+                case 8 -> {
+                    OrdenacaoAtivos ordenacao = new OrdenacaoAtivos();
+                    ordenacao.ordenarPorValorAtualComMetricas(listaAtivos);
+                }
+                case 9 -> buscarPorTipo(scanner);
                 case 0 -> { }
                 default -> System.out.println("Opção inválida.");
             }
@@ -54,9 +71,6 @@ public class SistemaAtivos {
         System.out.print("Nome: ");
         String nome = Utils.lerTexto(scanner);
 
-        // ---------------------
-        // TIPO
-        // ---------------------
         String tipo = "";
         while (true) {
             System.out.println("\nSelecione o Tipo do Ativo:");
@@ -79,9 +93,6 @@ public class SistemaAtivos {
             break;
         }
 
-        // ---------------------
-        // RISCO
-        // ---------------------
         String risco = "";
         while (true) {
             System.out.println("\nSelecione o Risco:");
@@ -104,9 +115,6 @@ public class SistemaAtivos {
             break;
         }
 
-        // ---------------------
-        // RENTABILIDADE MÉDIA
-        // ---------------------
         double rentabilidadeMedia;
         while (true) {
             System.out.print("Rentabilidade Média (%): ");
@@ -119,9 +127,6 @@ public class SistemaAtivos {
             }
         }
 
-        // ---------------------
-        // VALOR ATUAL
-        // ---------------------
         double valorAtual;
         while (true) {
             System.out.print("Valor Atual: ");
@@ -134,9 +139,6 @@ public class SistemaAtivos {
             }
         }
 
-        // ---------------------
-        // VARIAÇÃO PERCENTUAL INICIAL (pode ser 0)
-        // ---------------------
         System.out.print("Variação Percentual inicial (%): ");
         double variacaoPercentual = Utils.lerDouble(scanner);
 
@@ -188,6 +190,9 @@ public class SistemaAtivos {
         System.out.print("Digite o código do ativo: ");
         String codigoBusca = Utils.lerTexto(scanner);
 
+        OrdenacaoAtivos ordenacao = new OrdenacaoAtivos();
+        ordenacao.ordenarPorCodigo(listaAtivos); // Garantir que a lista está ordenada por código
+
         Ativo encontrado = new BuscaAtivos().buscaBinaria(listaAtivos, codigoBusca);
 
         if (encontrado != null) {
@@ -198,11 +203,18 @@ public class SistemaAtivos {
         }
     }
 
-    /**
-     * Simula um ciclo de mercado:
-     * cada ativo recebe uma variação aleatória entre -10% e +10%.
-     * Atualiza valorAtual, variacaoPercentual e ciclosNegativos.
-     */
+    private void buscarPorTipo(Scanner scanner) {
+        System.out.print("Digite o tipo do ativo: ");
+        String tipoBusca = Utils.lerTexto(scanner);
+        Ativo encontrado = new BuscaAtivos().buscaLinearPorTipo(listaAtivos, tipoBusca);
+        if (encontrado != null) {
+            System.out.printf("Ativo encontrado: Código: %s - Nome: %s - Tipo: %s - Valor Atual: %.2f%n",
+                    encontrado.getCodigo(), encontrado.getNome(), encontrado.getTipo(), encontrado.getValorAtual());
+        } else {
+            System.out.println("Nenhum ativo encontrado para o tipo especificado.");
+        }
+    }
+
     private void simularCicloMercado() {
         if (listaAtivos.isEmpty()) {
             System.out.println("Nenhum ativo cadastrado.");

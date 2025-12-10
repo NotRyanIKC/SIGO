@@ -177,6 +177,39 @@ public class SistemaRelatorios {
         }
     }
 
+    public void relatorioRankingPorRentabilidade(DLL<Ativo> listaAtivos) {
+        OrdenacaoAtivos ordenacao = new OrdenacaoAtivos();
+        ordenacao.ordenarPorRentabilidadeComMetricas(listaAtivos);
+        imprimirRanking(listaAtivos, "Rentabilidade");
+    }
+
+    public void relatorioRankingPorVariacao(DLL<Ativo> listaAtivos) {
+        OrdenacaoAtivos ordenacao = new OrdenacaoAtivos();
+        listaAtivos = ordenacao.ordenarPorVariacaoComMetricas(listaAtivos);
+        imprimirRanking(listaAtivos, "Variação");
+    }
+
+    public void relatorioRankingPorValorAtual(DLL<Ativo> listaAtivos) {
+        OrdenacaoAtivos ordenacao = new OrdenacaoAtivos();
+        ordenacao.ordenarPorValorAtualComMetricas(listaAtivos);
+        imprimirRanking(listaAtivos, "Valor Atual");
+    }
+
+    private void imprimirRanking(DLL<Ativo> lista, String criterio) {
+        System.out.printf("Ranking por %s:%n", criterio);
+        Node<Ativo> atual = lista.getHead();
+        int i = 1;
+        while (atual != null) {
+            Ativo a = atual.getData();
+            switch (criterio) {
+                case "Rentabilidade" -> System.out.printf("%d) %s - %s - Rentabilidade: %.2f%%%n", i++, a.getCodigo(), a.getNome(), a.getRentabilidadeMedia());
+                case "Variação" -> System.out.printf("%d) %s - %s - Variação: %.2f%%%n", i++, a.getCodigo(), a.getNome(), a.getVariacaoPercentual());
+                case "Valor Atual" -> System.out.printf("%d) %s - %s - Valor Atual: %.2f%n", i++, a.getCodigo(), a.getNome(), a.getValorAtual());
+            }
+            atual = atual.getNext();
+        }
+    }
+
     public void menuRelatorios(Scanner scanner, SistemaAtivos sistemaAtivos, SistemaInvestidores sistemaInvestidores) {
         int opcRelatorio;
         do {
@@ -184,6 +217,9 @@ public class SistemaRelatorios {
             System.out.println("1. Top 5 Ativos por Rentabilidade");
             System.out.println("2. Top 5 Ativos por Risco x Retorno");
             System.out.println("3. Relatorio de Investidor");
+            System.out.println("4. Ranking por Rentabilidade");
+            System.out.println("5. Ranking por Variação");
+            System.out.println("6. Ranking por Valor Atual");
             System.out.println("0. Voltar");
             System.out.print("Escolha uma opcao: ");
             while (!scanner.hasNextInt()) {
@@ -219,6 +255,9 @@ public class SistemaRelatorios {
                     Investidor investidorSelecionado = listaInvestidores.get(investidorIndex);
                     relatorioInvestidor(investidorSelecionado);
                 }
+                case 4 -> relatorioRankingPorRentabilidade(sistemaAtivos.getListaAtivos());
+                case 5 -> relatorioRankingPorVariacao(sistemaAtivos.getListaAtivos());
+                case 6 -> relatorioRankingPorValorAtual(sistemaAtivos.getListaAtivos());
                 case 0 -> { }
                 default -> System.out.println("Opcao invalida. Tente novamente.");
             }

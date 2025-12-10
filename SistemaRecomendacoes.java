@@ -15,9 +15,6 @@ public class SistemaRecomendacoes {
         listaRecomendacoes.add(recomendacao);
     }
 
-    // ----------------------------------------------------
-    // FUNÇÕES AUXILIARES DE RISCO E PERFIL
-    // ----------------------------------------------------
     private int nivelRiscoAtivo(String risco) {
         if (risco == null) return 0;
         risco = risco.toLowerCase();
@@ -43,7 +40,7 @@ public class SistemaRecomendacoes {
     private boolean riscoCompativel(Investidor investidor, Ativo ativo) {
         int nPerfil = nivelRiscoPerfil(investidor.getPerfilRisco());
         int nAtivo  = nivelRiscoAtivo(ativo.getRisco());
-        return nAtivo <= nPerfil; // ativo não pode ser mais arriscado que o perfil
+        return nAtivo <= nPerfil;
     }
 
     private double mediaRentabilidade(DLL<Ativo> listaAtivos) {
@@ -59,7 +56,6 @@ public class SistemaRecomendacoes {
         return cont > 0 ? soma / cont : 0.0;
     }
 
-    // score heurístico (IA simbólica)
     private double scoreHeuristico(Investidor inv, Ativo ativo, double mediaRentab) {
         double score = 0.0;
 
@@ -91,9 +87,6 @@ public class SistemaRecomendacoes {
         return score;
     }
 
-    // ----------------------------------------------------
-    // MENU
-    // ----------------------------------------------------
     public void menuRecomendacoes(Scanner scanner, DLL<Ativo> listaAtivos, DLL<Investidor> listaInvestidores) {
         int opcRecomendacao;
         do {
@@ -173,9 +166,6 @@ public class SistemaRecomendacoes {
         } while (opcRecomendacao != 0);
     }
 
-    // ----------------------------------------------------
-    // GERAÇÃO DE RECOMENDAÇÕES (regras 6, 7 e penalização)
-    // ----------------------------------------------------
     public void gerarRecomendacoes(Investidor investidor, DLL<Ativo> listaAtivos) {
         System.out.println("\nRecomendacoes para o investidor " + investidor.getNome() + ":");
 
@@ -184,7 +174,6 @@ public class SistemaRecomendacoes {
             return;
         }
 
-        // limpa recomendações anteriores
         listaRecomendacoes = new DLL<>();
 
         double mediaRent = mediaRentabilidade(listaAtivos);
@@ -199,7 +188,6 @@ public class SistemaRecomendacoes {
         while (atual != null) {
             Ativo ativo = atual.getData();
 
-            // penalização de confiança: 3 ciclos negativos
             if (ativo.getCiclosNegativos() >= 3) {
                 String justificativaSusp = String.format(
                         "Ativo %s (%s) suspenso: %d ciclos negativos consecutivos.",
@@ -215,19 +203,16 @@ public class SistemaRecomendacoes {
                 continue;
             }
 
-            // 1. Compatibilidade de risco
             if (!riscoCompativel(investidor, ativo)) {
                 atual = atual.getNext();
                 continue;
             }
 
-            // 2. Rentabilidade acima da média
             if (ativo.getRentabilidadeMedia() < mediaRent) {
                 atual = atual.getNext();
                 continue;
             }
 
-            // 3. Volatilidade controlada
             double vol = Math.abs(ativo.getVariacaoPercentual());
             double maxVol;
             String perfil = investidor.getPerfilRisco().toLowerCase();
@@ -256,7 +241,6 @@ public class SistemaRecomendacoes {
             return;
         }
 
-        // ordena por score (decrescente) – insertion sort
         for (int i = 1; i < count; i++) {
             Ativo keyAtivo = candidatos[i];
             double keyScore = scores[i];
@@ -270,7 +254,6 @@ public class SistemaRecomendacoes {
             scores[j + 1] = keyScore;
         }
 
-        // diversificação: não repetir TYPE consecutivo
         String ultimoTipo = null;
         int qtdSugeridos = 0;
 
@@ -309,9 +292,6 @@ public class SistemaRecomendacoes {
         }
     }
 
-    // ----------------------------------------------------
-    // LISTAR RECOMENDAÇÕES
-    // ----------------------------------------------------
     private void listarRecomendacoes() {
         if (listaRecomendacoes.isEmpty()) {
             System.out.println("Nenhuma recomendacao cadastrada.");
@@ -336,9 +316,6 @@ public class SistemaRecomendacoes {
         }
     }
 
-    // ----------------------------------------------------
-    // REALOCAÇÃO AUTOMÁTICA DE PORTFÓLIO (regra 8)
-    // ----------------------------------------------------
     public void sugerirRealocacao(Investidor investidor, DLL<Ativo> listaAtivos) {
         DLL<Investimento> hist = investidor.getHistoricoInvestimentos();
         if (hist.isEmpty()) {
@@ -372,13 +349,11 @@ public class SistemaRecomendacoes {
             double valorMercado = principal * fatorPreco;
             double lucroPrejuizo = valorMercado - principal;
 
-            // só olha ativos em prejuízo
             if (lucroPrejuizo >= 0) {
                 node = node.getNext();
                 continue;
             }
 
-            // procura ativo substituto com MESMO risco e rentabilidade maior
             Ativo melhor = null;
             double melhorRent = ativoAtual.getRentabilidadeMedia();
 
